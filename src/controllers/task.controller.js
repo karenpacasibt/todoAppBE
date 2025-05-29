@@ -3,8 +3,7 @@ const taskDecorator = require('../decorators/task.decorator')
 const taskLoadDetails = require('../utils/task.util')
 
 exports.getAll = async (req, res) => {
-    const userId = 1;
-    //const userId = req.user.id
+    const userId = req.user.id
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
@@ -35,6 +34,7 @@ exports.getAll = async (req, res) => {
             FROM tags_tasks WHERE tags_tasks.task_id = tasks.id AND tags_tasks.tag_id = ?)`;
             params.push(tag_id);
         }
+
         if (sort) {
             baseQuery += ` ORDER BY ${sort} ${order === 'desc' ? 'DESC' : 'ASC'}`;
         }
@@ -51,19 +51,24 @@ exports.getAll = async (req, res) => {
         } else {
             categories = []
         }
+
         let tagsIds = [...new Set(tasks.map(task => task.id))];
-        const [tags] = await db.query(`
+        let tags = [];
+        if (tagsIds.length > 0) {
+            [tags] = await db.query(`
                 SELECT tags.id, tags.name, tags_tasks.task_id
                 FROM tags
                 JOIN tags_tasks ON tags_tasks.tag_id = tags.id
                 WHERE tags_tasks.task_id IN (${tagsIds.map(() => '?').join(',')})
                 `, [...tagsIds]);
-
+        }
+        
         const taskAll = taskLoadDetails(tasks, categories, tags);
+
         const [[{ total }]] = await db.query(`
             SELECT COUNT(*) AS total
             FROM tasks
-            WHERE user_id = ?
+            WHERE id = ?
                 `, [userId]);
 
         res.json({
@@ -76,13 +81,12 @@ exports.getAll = async (req, res) => {
             }
         });
     } catch (error) {
-        res.status(500).json({ error });
+        res.status(500).json({ message: error });
     }
 };
 
 exports.getOne = async (req, res) => {
-    const userId = 1;
-    //const userId = req.user.id
+    const userId = req.user.id
     const { id } = req.params;
 
     try {
@@ -115,8 +119,7 @@ exports.getOne = async (req, res) => {
 };
 
 exports.create = async (req, res) => {
-    const userId = 1;
-    //const userId = req.user.id
+    const userId = req.user.id
     const { title, description, status = 0, category_id, tagIds = [] } = req.body;
 
     const conn = await db.getConnection();
@@ -172,9 +175,8 @@ exports.create = async (req, res) => {
 };
 
 exports.update = async (req, res) => {
-    const userId = 1;
-    //const userId = req.user.id
-    const { id } = req.params;
+    const userId = req.user.id
+    const id = req.params.id;
     const { title, description, status = 0, category_id = null, tagIds = [] } = req.body;
 
     const conn = await db.getConnection();
@@ -188,8 +190,9 @@ exports.update = async (req, res) => {
         }
 
         const [task] = await db.query('SELECT id FROM tasks WHERE id = ? AND user_id = ?', [id, userId]);
+
         if (task.length === 0) {
-            return res.status(404).json({ message: 'Task not found' });
+            return res.status(404).json({ message: 'Task not found ' });
         }
 
         if (category_id != null) {
@@ -236,7 +239,6 @@ exports.update = async (req, res) => {
             tags = []
         }
         await conn.commit();
-        console.log(category);
 
         const newTask = { id, title, description, status, category, tags };
         res.status(201).json({ data: taskDecorator(newTask) });
@@ -249,24 +251,21 @@ exports.update = async (req, res) => {
 };
 
 exports.destroy = async (req, res) => {
-    const userId = 1;
-    //const userId = req.user.id
-    const { id } = req.params;
+    const userId = req.user.id
+    const id = req.params.id;
     try {
         if (isNaN(req.params.id)) {
             return res.status(422).json({ message: 'The parameter must be a number' });
         }
-        const [task] = await db.query('SELECT id FROM tasks WHERE id = ? AND user_id = ?', [id, userId]);
+        const [task] = await db.query('SELECT * FROM tasks WHERE id = ? AND user_id = ?', [id, userId]);
         if (task.length === 0) {
             return res.status(404).json({ message: 'Task not found' });
         }
-        const [result] = await db.query(`
-            DELETE FROM tasks WHERE id = ? AND user_id = ?
-                `, [id, userId]);
-
+        const [backupTask] = task
+        const [result] = await db.query(`DELETE FROM tasks WHERE id = ? AND user_id = ?`, [id, userId]);
         await db.query(`DELETE FROM tags_tasks WHERE task_id = ? `, [id]);
 
-        res.json({ message: "Destroy task" });
+        res.json({ data: taskDecorator(backupTask) });
     } catch (error) {
         res.status(500).json({ error });
     }
