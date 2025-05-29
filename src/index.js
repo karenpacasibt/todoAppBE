@@ -1,7 +1,7 @@
 const express = require('express');
-const categoryRoutes = require('../routes/category.routes');
-const tagRoutes = require('../routes/tag.routes');
-const taskRoutes = require('../routes/task.routes');
+const categoryRoutes = require('./routes/category.routes');
+const tagRoutes = require('./routes/tag.routes');
+const taskRoutes = require('./routes/task.routes');
 const app = express();
 app.use(express.json());
 
