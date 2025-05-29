@@ -3,8 +3,7 @@ const categoryDecorator = require('../decorators/category.decorator')
 
 exports.getAll = async (req, res) => {
     try {
-        const userId = 1
-        // const userId = req.user.id;
+        const userId = req.user.id;
         const [categories] = await db.query('SELECT * FROM categories WHERE user_id = ?', [userId]);
         res.json({ data: categories.map(categoryDecorator) });
     } catch (error) {
@@ -14,8 +13,7 @@ exports.getAll = async (req, res) => {
 
 exports.getOne = async (req, res) => {
     try {
-        const userId = 1
-        // const userId = req.user.id;
+        const userId = req.user.id;
         if (isNaN(req.params.id)) {
             return res.status(422).json({ message: 'The parameter must be a number' });
         }
@@ -32,8 +30,7 @@ exports.getOne = async (req, res) => {
 exports.create = async (req, res) => {
     const { name } = req.body;
     try {
-        const userId = 1
-        // const userId = req.user.id;
+        const userId = req.user.id;
         if (!name) {
             return res.status(422).json({ message: 'Name is required' });
         }
@@ -52,8 +49,8 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
     const { name } = req.body;
     const id = req.params.id;
+    const userId = req.user.id;
     try {
-        const userId = 1
         if (isNaN(id)) {
             return res.status(422).json({ message: 'The parameter must be a number' });
         }
@@ -79,17 +76,18 @@ exports.update = async (req, res) => {
 exports.destroy = async (req, res) => {
     const id = req.params.id;
     try {
-        const userId = 1
-        // const userId = req.user.id;
+        const userId = req.user.id;
         if (isNaN(id)) {
             return res.status(422).json({ message: 'The parameter must be a number' });
         }
-        const [category] = await db.query('SELECT id FROM categories WHERE id = ? AND user_id = ?', [id, userId]);
+        const [category] = await db.query('SELECT * FROM categories WHERE id = ? AND user_id = ?', [id, userId]);
         if (category.length === 0) {
             return res.status(404).json({ message: 'Category not found' });
         }
+        const [backupCategory] = category
+        
         await db.query('DELETE FROM categories WHERE id = ? AND user_id = ?', [id, userId]);
-        res.json({ message: 'Category correctly eliminated' });
+        res.json({ data: categoryDecorator(backupCategory) });
     } catch (error) {
         res.json(error);
     }
