@@ -1,0 +1,55 @@
+const db = require('../DB/connection');
+const jwt = require('jsonwebtoken');
+const { encryptPassword, comparePassword } = require('../utils/hash.util');
+const { userExists } = require('../utils/validator.util');
+const { SECRET } = require('../config')
+
+exports.register = async (req, res) => {
+    try {
+        const { full_name, mail, password } = req.body;
+        const [users] = await db.query(
+            `SELECT full_name, mail FROM users WHERE full_name = ? OR mail = ?`,
+            [full_name, mail]
+        );
+
+        if (users.length > 0) {
+            const user = users[0];
+            if (user.full_name === full_name) {
+                return res.status(400).json({ message: 'The name user already exists' });
+            }
+            if (user.mail === mail) {
+                return res.status(400).json({ message: 'The mail already exists' });
+            }
+        }
+        const hashedPassword = await encryptPassword(req.body.password);
+        const [newUser] = await db.query('INSERT INTO users (full_name, mail, password) VALUES (?, ?, ?)',
+            [full_name, mail, hashedPassword]);
+
+        const token = jwt.sign({ id: newUser.insertId, mail }, SECRET, { expiresIn: '1d' });
+        res.status(201).json({ token });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error registering user' })
+    }
+
+}
+exports.login = async (req, res) => {
+    const { mail } = req.body;
+
+    const [users] = await db.query('SELECT * FROM users WHERE mail = ?', [mail]);
+    if (users.length === 0) return res.status(401).json({ message: 'User not found' });
+
+    const user = users[0];
+
+    const valid = await comparePassword(req.body.password, user.password);
+
+    if (!valid) return res.status(401).json({ message: 'Incorrect password' });
+
+    const token = jwt.sign({
+        id: user.id,
+        mail: user.mail
+    }, SECRET, { expiresIn: '1d' });
+
+    res.json({ token });
+};

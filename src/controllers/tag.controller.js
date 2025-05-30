@@ -3,8 +3,7 @@ const tagDecorator = require('../decorators/tag.decorator')
 
 exports.getAll = async (req, res) => {
     try {
-        const userId = 1
-        // const userId = req.user.id;
+        const userId = req.user.id;
         const [tags] = await db.query('SELECT * FROM tags WHERE user_id = ?', [userId]);
         res.json({ data: tags.map(tagDecorator) });
     } catch (error) {
@@ -14,8 +13,7 @@ exports.getAll = async (req, res) => {
 
 exports.getOne = async (req, res) => {
     try {
-        const userId = 1
-        // const userId = req.user.id;
+        const userId = req.user.id;
         if (isNaN(req.params.id)) {
             return res.status(422).json({ message: 'The parameter must be a number' });
         }
@@ -32,8 +30,7 @@ exports.getOne = async (req, res) => {
 exports.create = async (req, res) => {
     const { name } = req.body;
     try {
-        const userId = 1
-        // const userId = req.user.id;
+        const userId = req.user.id;
         if (!name) {
             return res.status(422).json({ message: 'Name is required' });
         }
@@ -51,9 +48,9 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
     const { name } = req.body;
+    const userId = req.user.id;
     const id = req.params.id;
     try {
-        const userId = 1
         if (isNaN(id)) {
             return res.status(422).json({ message: 'The parameter must be a number' });
         }
@@ -79,8 +76,7 @@ exports.update = async (req, res) => {
 exports.destroy = async (req, res) => {
     const id = req.params.id;
     try {
-        const userId = 1
-        // const userId = req.user.id;
+        const userId = req.user.id;
         if (isNaN(id)) {
             return res.status(422).json({ message: 'The parameter must be a number' });
         }
@@ -88,8 +84,9 @@ exports.destroy = async (req, res) => {
         if (tag.length === 0) {
             return res.status(404).json({ message: 'tag not found' });
         }
+        const [backupTag] = tag
         await db.query('DELETE FROM tags WHERE id = ? AND user_id = ?', [id, userId]);
-        res.json({ message: 'tag correctly eliminated' });
+        res.json({ data: tagDecorator(backupTag) });
     } catch (error) {
         res.json(error);
     }
