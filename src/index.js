@@ -1,4 +1,5 @@
 const express = require('express');
+const config = require('./config')
 const categoryRoutes = require('./routes/category.routes');
 const tagRoutes = require('./routes/tag.routes');
 const taskRoutes = require('./routes/task.routes');
@@ -15,7 +16,7 @@ app.use('/tasks', taskRoutes);
 app.get('/', (req, res) => {
     res.send('Server running');
 });
-app.listen(3000, () => {
-    console.log('Server on http://localhost:3000');
+app.listen(config.PORT, config.HOST, () => {
+    console.log(`Server on http://${config.HOST}:${config.PORT}`);
 });
 
