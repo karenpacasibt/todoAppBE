@@ -6,5 +6,5 @@ CREATE TABLE IF NOT EXISTS tasks (
     category_id INT,
     user_id INT,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
