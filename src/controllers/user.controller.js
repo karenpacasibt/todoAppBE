@@ -55,3 +55,13 @@ exports.login = async (req, res) => {
         res.status(401).json(error);
     }
 };
+
+exports.getProfile = async (req, res) => {
+    const { id } = req.user;
+
+    const [users] = await db.query('SELECT id, full_name, mail FROM users WHERE id = ?', [id]);
+
+    if (users.length === 0) return res.status(404).json({ message: 'User not found' });
+
+    res.json(users[0]);
+};

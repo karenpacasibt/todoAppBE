@@ -6,7 +6,6 @@ exports.verifyToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     if (!authHeader) return res.status(401).json({ message: 'No token provided' });
     const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(403).json({ message: "No token provided" });
 
     try {
         const decoded = jwt.verify(token, jwtConfig.secret);
@@ -19,8 +18,6 @@ exports.verifyToken = async (req, res, next) => {
 
         next();
     } catch (error) {
-        console.error(error);
-
         res.status(401).json({ message: 'Invalid token' });
     }
 };

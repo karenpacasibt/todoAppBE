@@ -1,8 +1,11 @@
 require('dotenv').config();
 
 const config = {
-    HOST: process.env.HOST || '127.0.0.1',
-    PORT: process.env.PORT || 3000,
+    HOST_BE: process.env.HOST_BE || '127.0.0.1',
+    PORT_BE: process.env.PORT_BE || 3000,
+    
+    HOST_FE : process.env.HOST_FE,
+    PORT_FE : process.env.PORT_FE,
 
     db: {
         host: process.env.DB_HOST || 'localhost',
