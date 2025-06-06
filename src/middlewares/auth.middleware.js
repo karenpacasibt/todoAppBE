@@ -1,14 +1,15 @@
 const jwt = require('jsonwebtoken')
-const { SECRET } = require('../config')
+const { jwt: jwtConfig } = require('../config');
+
 const db = require('../DB/connection')
 
 exports.verifyToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
+    if (!authHeader) return res.status(401).json({ message: 'No token provided' });
     const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ message: "No token provided" });
 
     try {
-        const decoded = jwt.verify(token, SECRET);
+        const decoded = jwt.verify(token, jwtConfig.secret);
 
         req.user = { id: decoded.id, mail: decoded.mail };
 
@@ -18,8 +19,6 @@ exports.verifyToken = async (req, res, next) => {
 
         next();
     } catch (error) {
-        console.error(error);
-
         res.status(401).json({ message: 'Invalid token' });
     }
 };
