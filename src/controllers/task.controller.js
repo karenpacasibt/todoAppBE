@@ -53,7 +53,8 @@ exports.getAll = async (req, res) => {
         }
 
         let tagsIds = [...new Set(tasks.map(task => task.id))];
-        let tags;
+
+        let tags = [];
         if (tagsIds.length > 0) {
             [tags] = await db.query(`
                 SELECT tags.id, tags.name, tags_tasks.task_id
@@ -61,16 +62,14 @@ exports.getAll = async (req, res) => {
                 JOIN tags_tasks ON tags_tasks.tag_id = tags.id
                 WHERE tags_tasks.task_id IN (${tagsIds.map(() => '?').join(',')})
                 `, [...tagsIds]);
-        } else {
-            tags = []
         }
-
+        
         const taskAll = taskLoadDetails(tasks, categories, tags);
 
         const [[{ total }]] = await db.query(`
             SELECT COUNT(*) AS total
             FROM tasks
-            WHERE user_id = ?
+            WHERE id = ?
                 `, [userId]);
 
         res.json({
@@ -189,8 +188,9 @@ exports.update = async (req, res) => {
         }
 
         const [task] = await db.query('SELECT id FROM tasks WHERE id = ? AND user_id = ?', [id, userId]);
+
         if (task.length === 0) {
-            return res.status(404).json({ message: 'Task not found' });
+            return res.status(404).json({ message: 'Task not found ' });
         }
 
         const taskData = task[0];

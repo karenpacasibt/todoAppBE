@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken')
 const { jwt: jwtConfig } = require('../config');
+
 const db = require('../DB/connection')
 
 exports.verifyToken = async (req, res, next) => {

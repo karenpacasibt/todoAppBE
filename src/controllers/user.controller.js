@@ -15,9 +15,14 @@ exports.register = async (req, res) => {
             const user = users[0];
             if (user.full_name === full_name) {
                 return res.status(400).json({ message: 'The name user already exists' });
+                return res.status(422).json({ message: 'The name user already exists' });
             }
             if (user.mail === mail) {
                 return res.status(400).json({ message: 'The mail already exists' });
+            }
+
+            if (user.password.length > 8) {
+                return res.status(400).json({ message: 'The password must be at least 8 characters long.' });
             }
         }
         const hashedPassword = await encryptPassword(req.body.password);
@@ -28,6 +33,7 @@ exports.register = async (req, res) => {
         res.status(201).json({ token });
 
     } catch (error) {
+
         res.status(500).json({ message: 'Error registering user' })
     }
 
@@ -65,3 +71,4 @@ exports.getProfile = async (req, res) => {
 
     res.json(users[0]);
 };
+
