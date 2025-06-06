@@ -2,5 +2,5 @@ CREATE TABLE IF NOT EXISTS categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     user_id INT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) 
+    FOREIGN KEY (user_id) REFERENCES users(id) 
 );

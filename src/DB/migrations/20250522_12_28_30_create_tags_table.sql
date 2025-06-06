@@ -2,5 +2,5 @@ CREATE TABLE IF NOT EXISTS tags (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     user_id INT,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
